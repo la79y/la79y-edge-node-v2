@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gke-edge-deployment
+  labels:
+    app: edge
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: edge
+  template:
+    metadata:
+      labels:
+        app: edge
+    spec:
+      containers:
+      - name: edge
+        image: bandersaeed94/la79y:edge
+        command: ["node", "edge_docker_server_v2.js"]
+        env:
+        - name: SERVER_PORT
+          value: "10081"
+        - name: SERVER_ID
+          value: "1"
+        - name: KAFKA_BROKER_LIST
+          value: "kafka-server:9092"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "750m"
+          limits:
+            memory: "128Mi"
+            cpu: "750m"
+        ports:
+        - containerPort: 10081
+          protocol: UDP
+        imagePullPolicy: Always
+       
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-service-udp
+spec:
+  type: LoadBalancer
+  selector:
+    app: edge
+  ports:
+  - name: edge-service-10081-10081
+    port: 10081
+    protocol: UDP
+    targetPort: 10081
+

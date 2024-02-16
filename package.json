@@ -1,0 +1,16 @@
+{
+  "name": "la79y-edge-node-v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "edge.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node edge_docker.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@eyevinn/srt": "file:node-srt",
+    "node-rdkafka": "^2.18.0"
+  }
+}
