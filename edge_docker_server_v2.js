@@ -34,7 +34,8 @@ async function onClientConnected(connection) {
             "group.id": `edge-${process.env.HOSTNAME != null && process.env.HOSTNAME != undefined ? process.env.HOSTNAME : process.env.SERVER_ID}-${connection.fd}-${Date.now()}`, //edge-2 no need
             "socket.keepalive.enable": true,
             "enable.auto.commit": true,
-            "isolation.level": "read_uncommitted",
+            "isolation.level": "read_committed",
+            // "isolation.level": "read_uncommitted",
             "auto.offset.reset": "latest",
         },
         {},
@@ -44,11 +45,30 @@ async function onClientConnected(connection) {
             objectMode: false,
         },
     );
-
+    // Robust handling of SRT connection errors
+    connection.on('error', (err) => {
+        console.error(`SRT Connection Error for FD ${connection.fd}:`, err);
+        stream.destroy()
+        stream.consumer.disconnect();
+        connection.close();
+    });
     stream.on("error", function (err) {
+        console.error('Kafka Consumer Stream Error:', err);
         if (err) {
             console.log(err);
-            connection.close()
+            stream.destroy()
+            stream.consumer.disconnect();
+            connection.close();
+        }
+    });
+// Handling Kafka consumer specific errors
+    stream.consumer.on("event.error", function (err) {
+        console.error('Kafka Consumer Error:', err);
+        if (err) {
+            console.log(err);
+            stream.destroy()
+            stream.consumer.disconnect();
+            connection.close();
         }
     });
     stream.on("data", function (chunk) {
@@ -69,7 +89,7 @@ async function onClientConnected(connection) {
             console.log('Skipping send: buffer is empty.');
             return;
         }
-        fd.readerWriter.writeChunks(buffer, 1000, 1316);
+        fd.readerWriter.writeChunks(buffer);
     });
 
     stream.consumer.on("event.error", function (err) {
@@ -83,11 +103,13 @@ async function onClientConnected(connection) {
         }
     });
     connection.on("closing", async () => {
+        connection.close();
     });
     connection.on("closed", async () => {
         console.log(`closed ${connection.fd}`);
         stream.destroy()
         stream.consumer.disconnect();
+        connection.close();
     });
 
     // const reader = connection.getReaderWriter();
