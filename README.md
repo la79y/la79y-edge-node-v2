@@ -35,3 +35,12 @@ to play multiple streams needs to change u(user) in streamId and specify resourc
 
 ```
 
+
+## Deploy on K8S
+```shell
+gcloud container clusters get-credentials lahthi-cluster --region me-central1 --project final-project-413218
+```
+```shell
+kubectl apply -f 00-namespace.yaml
+kubectl apply -f k8s.yaml
+```
