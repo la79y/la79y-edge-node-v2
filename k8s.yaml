@@ -44,11 +44,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: edge-service-udp
-  namespace: edge
+  namespace: edge-namespace
 spec:
   type: LoadBalancer
   selector:
-    app: edge-namespace
+    app: edge
   ports:
   - name: edge-service-10081-10081
     port: 10081
