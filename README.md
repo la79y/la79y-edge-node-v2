@@ -48,5 +48,5 @@ kubectl apply -f k8s.yaml
 
 ## Play edge k8s
 ```shell
-    ffplay -fflags nobuffer -err_detect ignore_err -i 'srt://34.18.61.144:10081?streamid=#!::u=bander1234,r=livestream4,m=request,t=stream,s=Session_ID'
+    ffplay -fflags nobuffer -err_detect ignore_err -i 'srt://34.18.61.144:10081?streamid=#!::u=bander1234,r=livestream4,m=request,t=stream,s=Session_ID' -vf "fps=fps=1"
 ```
