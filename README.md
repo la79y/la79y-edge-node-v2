@@ -55,3 +55,8 @@ kubectl describe service edge-service-udp -n edge-namespace
 ```shell
     ffplay -fflags nobuffer -err_detect ignore_err -i 'srt://34.18.61.144:10081?streamid=#!::u=bander1234,r=livestream4,m=request,t=stream,s=Session_ID' -vf "fps=fps=1"
 ```
+digital ocean
+```shell
+    ffplay -fflags nobuffer -err_detect ignore_err -i 'srt://164.90.241.38:10081?streamid=#!::u=bander1234,r=livestream4,m=request,t=stream,s=Session_ID' -vf "fps=fps=1"
+```
+
