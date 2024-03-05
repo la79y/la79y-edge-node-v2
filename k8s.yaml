@@ -28,10 +28,10 @@ spec:
           value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092,kafka-1.kafka-headless.kafka.svc.cluster.local:9092,kafka-2.kafka-headless.kafka.svc.cluster.local:9092"
         resources:
           requests:
-            memory: "1GB"
+            memory: "512Mi"
             cpu: "500m"
           limits:
-            memory: "1536MB"
+            memory: "1024Mi"
             cpu: "800m"
         ports:
         - containerPort: 10081
