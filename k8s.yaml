@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: edge
-        image: bandersaeed94/la79y:edge-v3
+        image: bandersaeed94/la79y:edge-v4
         command: ["node", "edge_docker_server_v2.js"]
         env:
         - name: SERVER_PORT
@@ -26,6 +26,8 @@ spec:
           value: "1"
         - name: KAFKA_BROKER_LIST
           value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092,kafka-1.kafka-headless.kafka.svc.cluster.local:9092,kafka-2.kafka-headless.kafka.svc.cluster.local:9092"
+        - name: HEALTH_CHECK_PORT
+          value: "9999"
         resources:
           requests:
             memory: "512Mi"
@@ -36,6 +38,8 @@ spec:
         ports:
         - containerPort: 10081
           protocol: UDP
+        - containerPort: 9999
+          protocol: TCP
         imagePullPolicy: Always
        
 
@@ -45,6 +49,13 @@ kind: Service
 metadata:
   name: edge-service-udp
   namespace: edge-namespace
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: "tcp"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "9999"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-check-interval-seconds: "3"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-response-timeout-seconds: "5"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-unhealthy-threshold: "3"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-healthy-threshold: "5"
 spec:
   type: LoadBalancer
   selector:
@@ -54,4 +65,7 @@ spec:
     port: 10081
     protocol: UDP
     targetPort: 10081
-
+  - name: health-edge-service-9999-9999
+    port: 9999
+    protocol: TCP
+    targetPort: 9999

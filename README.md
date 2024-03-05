@@ -25,7 +25,7 @@ note building docker needs internet as it checkout and clone SRT C library
     ./build_start_edge.sh -i 1 -p 1235 -b kafka-1:9092 -t nodejs-edge-rdkafka-v2 -f edge_docker_server_v2.js
   ```
   ```sh
-    ./build_start_edge.sh -i 1 -p 1235 -b kafka-1:9092,kafka-2:9092,kafka-3:9092 -t nodejs-edge-rdkafka-v2 -f edge_docker_server_v2.js
+    ./build_start_edge.sh -i 1 -p 1235 -h 9999 -b kafka-1:9092,kafka-2:9092,kafka-3:9092 -t nodejs-edge-rdkafka-v2 -f edge_docker_server_v2.js
   ```
 ## To play the stream
 
@@ -43,6 +43,11 @@ gcloud container clusters get-credentials lahthi-cluster --region me-central1 --
 ```shell
 kubectl apply -f 00-namespace.yaml
 kubectl apply -f k8s.yaml
+
+#check service has external ip
+kubectl get service -n edge-namespace
+kubectl describe service edge-service-udp -n edge-namespace
+
 ```
 
 
