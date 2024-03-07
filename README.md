@@ -1,5 +1,5 @@
 # la79y-edge-node-v2
-```git clone  --recurse-submodules https://github.com/la79y/la79y-origin-node-v2.git```
+```git clone  --recurse-submodules https://github.com/la79y/la79y-edge-node-v2.git```
 
 
 ## Requirement
