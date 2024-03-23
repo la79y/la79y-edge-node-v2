@@ -3,6 +3,7 @@ const {SRT, SRTServer, AsyncSRT, SRTReadStream, SRTSockOpt} = require(
     "@eyevinn/srt",
 );
 var Kafka = require("node-rdkafka");
+const {fetchConfigByKey} = require('./getConfigByKey')
 
 const asyncSrtServer = new SRTServer(
     Number(process.env.SERVER_PORT),
@@ -117,7 +118,31 @@ async function onClientConnected(connection) {
     }
 }
 
-asyncSrtServer.create().then((s) => {
+asyncSrtServer.create().then(async (s) => {
+    // Set encryption options here
+    let passphrase = process.env.SRT_PASSPHRASE; // Ensure you have this environment variable set
+    let keyLength = 16; // 128 bits. You can also use 24 for 192 bits or 32 for 256 bits
+    try{
+        const result =  await fetchConfigByKey('edge_passphrase')
+        if(result.length > 0 && result[0].value){
+            passphrase = result[0].value;
+        }
+    } catch (err){
+        console.error(`failed fetching config will default to env passphrase`, err)
+    }
+    try{
+        const result =  await fetchConfigByKey('edge_keyLength')
+        if(result.length > 0 && result[0].value){
+            keyLength = Number(result[0].value);
+        }
+    } catch (err){
+        console.error(`failed fetching config will default to hardcoded keylength`, err)
+    }
+    // // Check if passphrase is set, then enable encryption
+    if (passphrase && passphrase.length > 0) {
+        await s.setSocketFlags([SRT.SRTO_PASSPHRASE,SRT.SRTO_PBKEYLEN], [passphrase,keyLength]);
+    }
+
     s.open();
 }).then(() => {
     console.log(
