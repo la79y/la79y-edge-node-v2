@@ -3,7 +3,7 @@ const {SRT, SRTServer, AsyncSRT, SRTReadStream, SRTSockOpt} = require(
     "@eyevinn/srt",
 );
 var Kafka = require("node-rdkafka");
-const {fetchConfigByKey} = require('./getConfigByKey')
+const {fetchConfigByKey,fetchSessionIdByResourceAndUser, updateSessionToUsed} = require('./getConfigByKey')
 
 const asyncSrtServer = new SRTServer(
     Number(process.env.SERVER_PORT),
@@ -23,9 +23,26 @@ async function onClientConnected(connection) {
     console.log(SRT.SRTO_STREAMID)
     let streamId = await asyncSrt.getSockOpt(fd.fd, SRT.SRTO_STREAMID);
     console.log(`streamId ${streamId}`)
+
+    let username = streamId.substring(streamId.indexOf("u="));
+    username = username.substring(2, username.indexOf(","));
+    console.log(`username=${username}`)
+
+    let sessionId = streamId.substring(streamId.indexOf("s="));
+    sessionId = sessionId.substring(2, sessionId.indexOf(","));
+    console.log(`sessionId=${sessionId}`)
+
     let requestedResource = streamId.substring(streamId.indexOf('r='));
     requestedResource = requestedResource.substring(2, requestedResource.indexOf(','));//skip r=
     console.log(`requestedResource ${requestedResource}`)
+
+    let rows = await  fetchSessionIdByResourceAndUser(sessionId,username,requestedResource,false);
+    console.log(`row: ${JSON.stringify(rows)}`);
+    if(rows.length < 1){
+        await connection.close();//todo close with some error so client wont reconnect
+    } else {
+        updateSessionToUsed(sessionId,username,requestedResource)
+    }
 
     // Read from the librdtesting-01 topic... note that this creates a new stream on each call!
     var stream = Kafka.KafkaConsumer.createReadStream(
