@@ -3,7 +3,7 @@ const {SRT, SRTServer, AsyncSRT, SRTReadStream, SRTSockOpt} = require(
     "@eyevinn/srt",
 );
 var Kafka = require("node-rdkafka");
-const {fetchConfigByKey,fetchSessionIdByResourceAndUser, updateSessionToUsed} = require('./getConfigByKey')
+const {fetchConfigByKey, fetchSessionIdByResourceAndUser, updateSessionToUsed} = require('./getConfigByKey')
 
 const asyncSrtServer = new SRTServer(
     Number(process.env.SERVER_PORT),
@@ -36,20 +36,16 @@ async function onClientConnected(connection) {
     requestedResource = requestedResource.substring(2, requestedResource.indexOf(','));//skip r=
     console.log(`requestedResource ${requestedResource}`)
 
-    let enable_test_session = await fetchConfigByKey('enable_test_session_id');
-    let test_session = await fetchConfigByKey('test_session_id');
-
-    if(enable_test_session.length == 1 &&  enable_test_session[0].value == 'true'
-        && test_session.length == 1 && test_session[0].value == sessionId){
+    if (process.env.ENABLE_TEST_SESSION_ID == 'true' && process.env.TEST_SESSION_ID == sessionId) {
         //do nothing
-    }
-    else{
-        let rows = await  fetchSessionIdByResourceAndUser(sessionId,username,requestedResource,false);
+        console.log('bypassing check')
+    } else {
+        let rows = await fetchSessionIdByResourceAndUser(sessionId, username, requestedResource, false);
         console.log(`row: ${JSON.stringify(rows)}`);
-        if(rows.length < 1){
+        if (rows.length < 1) {
             await connection.close();//todo close with some error so client wont reconnect
         } else {
-            updateSessionToUsed(sessionId,username,requestedResource)
+            updateSessionToUsed(sessionId, username, requestedResource)
         }
     }
 
@@ -116,7 +112,14 @@ async function onClientConnected(connection) {
             console.log('Skipping send: buffer is empty.');
             return;
         }
-        fd.readerWriter.writeChunks(buffer);
+        try {
+            fd.readerWriter.writeChunks(buffer);
+        } catch (e) {
+            console.log(e);
+            stream.destroy()
+            stream.consumer.disconnect();
+            connection.close();
+        }
     });
 
     stream.consumer.on("event.error", function (err) {
@@ -148,25 +151,38 @@ asyncSrtServer.create().then(async (s) => {
     // Set encryption options here
     let passphrase = process.env.SRT_PASSPHRASE; // Ensure you have this environment variable set
     let keyLength = 16; // 128 bits. You can also use 24 for 192 bits or 32 for 256 bits
-    try{
-        const result =  await fetchConfigByKey('edge_passphrase')
-        if(result.length > 0 && result[0].value){
+    try {
+        const result = await fetchConfigByKey('edge_passphrase')
+        if (result.length > 0 && result[0].value) {
             passphrase = result[0].value;
         }
-    } catch (err){
+    } catch (err) {
         console.error(`failed fetching config will default to env passphrase`, err)
     }
-    try{
-        const result =  await fetchConfigByKey('edge_keyLength')
-        if(result.length > 0 && result[0].value){
+    try {
+        const result = await fetchConfigByKey('edge_keyLength')
+        if (result.length > 0 && result[0].value) {
             keyLength = Number(result[0].value);
         }
-    } catch (err){
+    } catch (err) {
         console.error(`failed fetching config will default to hardcoded keylength`, err)
     }
     // // Check if passphrase is set, then enable encryption
     if (passphrase && passphrase.length > 0) {
-        await s.setSocketFlags([SRT.SRTO_PASSPHRASE,SRT.SRTO_PBKEYLEN], [passphrase,keyLength]);
+        await s.setSocketFlags([SRT.SRTO_PASSPHRASE, SRT.SRTO_PBKEYLEN], [passphrase, keyLength]);
+    }
+
+    let enable_test_session = await fetchConfigByKey('enable_test_session_id');
+    let test_session_id = await fetchConfigByKey('test_session_id');
+    if (enable_test_session.length == 1) {
+        process.env.ENABLE_TEST_SESSION_ID = enable_test_session[0].value;
+    } else {
+        process.env.ENABLE_TEST_SESSION_ID = 'false'
+    }
+    if (test_session_id.length == 1) {
+        process.env.TEST_SESSION_ID = test_session_id[0].value;
+    } else {
+        process.env.TEST_SESSION_ID = 'null'
     }
 
     s.open();
