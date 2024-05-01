@@ -5,9 +5,6 @@ const {SRT, SRTServer, AsyncSRT, SRTReadStream, SRTSockOpt} = require(
 var Kafka = require("node-rdkafka");
 const {fetchConfigByKey,fetchSessionIdByResourceAndUser, updateSessionToUsed} = require('./getConfigByKey')
 
-let enable_test_session = await fetchConfigByKey('enable_test_session_id');
-let test_session = await fetchConfigByKey('test_session_id');
-
 const asyncSrtServer = new SRTServer(
     Number(process.env.SERVER_PORT),
     "0.0.0.0",
@@ -38,6 +35,9 @@ async function onClientConnected(connection) {
     let requestedResource = streamId.substring(streamId.indexOf('r='));
     requestedResource = requestedResource.substring(2, requestedResource.indexOf(','));//skip r=
     console.log(`requestedResource ${requestedResource}`)
+
+    let enable_test_session = await fetchConfigByKey('enable_test_session_id');
+    let test_session = await fetchConfigByKey('test_session_id');
 
     if(enable_test_session.length == 1 &&  enable_test_session[0].value == 'true'
         && test_session.length == 1 && test_session[0].value == sessionId){
