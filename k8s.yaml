@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: edge
-        image: bandersaeed94/la79y:edge-v4
+        image: bandersaeed94/la79y:edge-v6
         command: ["node", "edge_docker_server_v2.js"]
         env:
         - name: SERVER_PORT
