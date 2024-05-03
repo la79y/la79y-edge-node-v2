@@ -18,7 +18,7 @@ spec:
       containers:
       - name: edge
         image: bandersaeed94/la79y:edge-v7
-        command: ["node", "edge_docker_server_v2.js"]
+        command: ["node","--max-old-space-size=4096", "edge_docker_server_v2.js"]
         env:
         - name: SERVER_PORT
           value: "10081"
@@ -42,9 +42,6 @@ spec:
           requests:
             memory: "1024Mi"
             cpu: "1000m"
-          limits:
-            memory: "2048Mi"
-            cpu: "1800m"
         ports:
         - containerPort: 10081
           protocol: UDP
@@ -94,9 +91,21 @@ spec:
   minReplicas: 1
   maxReplicas: 10
   metrics:
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 60  # Lowering this value to make the autoscaler more sensitive
+  behavior:
+    scaleUp:
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 5
+    scaleDown:
+      stabilizationWindowSeconds: 1200
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300
