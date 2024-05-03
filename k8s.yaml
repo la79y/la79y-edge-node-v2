@@ -6,7 +6,7 @@ metadata:
     app: edge
   namespace: edge-namespace
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: edge
@@ -43,7 +43,7 @@ spec:
             memory: "1024Mi"
             cpu: "1000m"
           limits:
-            memory: "1536Mi"
+            memory: "2048Mi"
             cpu: "1800m"
         ports:
         - containerPort: 10081
