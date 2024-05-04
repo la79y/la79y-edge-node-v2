@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: edge
-        image: bandersaeed94/la79y:edge-v7
+        image: bandersaeed94/la79y:edge-v11
         command: ["node","--max-old-space-size=4096", "edge_docker_server_v2.js"]
         env:
         - name: SERVER_PORT
