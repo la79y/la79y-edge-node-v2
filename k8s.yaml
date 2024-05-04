@@ -59,10 +59,10 @@ metadata:
   annotations:
     service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: "tcp"
     service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "9999"
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-check-interval-seconds: "10"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-check-interval-seconds: "60"
     service.beta.kubernetes.io/do-loadbalancer-healthcheck-response-timeout-seconds: "5"
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-unhealthy-threshold: "3"
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-healthy-threshold: "5"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-unhealthy-threshold: "5"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-healthy-threshold: "1"
 spec:
   type: LoadBalancer
   selector:
@@ -93,6 +93,12 @@ spec:
   metrics:
   - type: Resource
     resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80  # Lowering this value to make the autoscaler more sensitive
+  - type: Resource
+    resource:
       name: memory
       target:
         type: Utilization
@@ -102,7 +108,7 @@ spec:
       policies:
         - type: Pods
           value: 2
-          periodSeconds: 5
+          periodSeconds: 60
     scaleDown:
       stabilizationWindowSeconds: 1200
       policies:
